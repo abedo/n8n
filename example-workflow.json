@@ -1,0 +1,62 @@
+{
+  "name": "Moje pierwsze demo - Kursy Walut NBP",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "1a2b3c4d-0001",
+      "name": "Testuj Ręcznie"
+    },
+    {
+      "parameters": {
+        "url": "https://api.nbp.pl/api/exchangerates/tables/A/?format=json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0],
+      "id": "1a2b3c4d-0002",
+      "name": "Pobierz Kursy NBP"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pobieramy dane z poprzedniego węzła (API NBP)\nconst tableData = $input.first().json;\nconst rates = tableData.rates || [];\n\n// Wyszukujemy interesujące nas waluty\nconst targets = ['USD', 'EUR', 'GBP', 'CHF'];\nconst selectedRates = rates.filter(r => targets.includes(r.code));\n\n// Formatujemy czytelny raport tekstowy\nconst date = tableData.effectiveDate;\nlet report = `📊 **RAPORT KURSU WALUT NBP (${date})**\\n\\n`;\n\nselectedRates.forEach(r => {\n  report += `• **${r.code}** (${r.currency}): ${r.mid.toFixed(4)} PLN\\n`;\n});\n\nreturn {\n  data_publikacji: date,\n  pobranych_walut: rates.length,\n  wybrane_waluty: selectedRates,\n  raport_tekstowy: report\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "id": "1a2b3c4d-0003",
+      "name": "Przetwórz i Formatuj Dane"
+    }
+  ],
+  "connections": {
+    "Testuj Ręcznie": {
+      "main": [
+        [
+          {
+            "node": "Pobierz Kursy NBP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pobierz Kursy NBP": {
+      "main": [
+        [
+          {
+            "node": "Przetwórz i Formatuj Dane",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
