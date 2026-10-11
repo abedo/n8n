@@ -1,0 +1,159 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "miesiąc rok",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "miesiąc rok"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ce955779-4e3c-463b-9a4c-54939951dbc7",
+      "name": "On form submission",
+      "webhookId": "53c17142-e653-47df-861f-32e970a3c1b2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a precise assistant helping users calculate working hours for their monthly reports. Your task is to provide two specific numbers based on the month and year provided by the user:\\n\\n1. Total working hours from the 1st day of the month up to and including the 25th day.\\n2. Total working hours for the entire calendar month.\\n\\n  Rules:\\n  - A standard workday is 8 hours.\\n  - Working days are Monday through Friday.\\n  - You must exclude Saturdays, Sundays, and all official public holidays in Poland.\\n  - Respond clearly with these two values.\\n\\n\n{{ $json[\"miesiąc rok\"] }}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        224,
+        0
+      ],
+      "id": "35c7034c-139e-4ac5-8cf9-0ccf907bfe58",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        208
+      ],
+      "id": "c243eea7-2cd6-4667-a87c-732ab0363f8d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "EStk8zmGCh4Exwcc",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/xxxxxx/yyyyy",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "=Hours for {{ $json.output.month }}  {{ $json.output.hours_1_to_25 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        592,
+        0
+      ],
+      "id": "225e8b92-4736-497e-bf5e-9e801182346e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": " {\n   \"month\": \"October 2026\",\n   \"hours_1_to_25\": 144,\n   \"hours_total_month\": 159\n }\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        224
+      ],
+      "id": "50fe7201-0659-4495-a641-793452824577",
+      "name": "Structured Output Parser1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8479133b-8b47-40d0-ae53-e226a154989a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f33fb73ba6f72dea48887512688266b5acbaa7f68360b388af76e899aa186e85"
+  },
+  "nodeGroups": [],
+  "id": "VGoZA6arhAGTC3cV",
+  "tags": []
+}
